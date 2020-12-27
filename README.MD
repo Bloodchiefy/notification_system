@@ -1,3 +1,17 @@
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Einführung](#einführung)
+    - [Motivation](#motivation)
+    - [Arbeitsschritte](#arbeitsschritte)
+        - [Datensammlung](#datensammlung)
+        - [Speicherung der gesammelten Daten](#speicherung-der-gesammelten-daten)
+        - [Zusammensetzen und erstes Ausführen](#zusammensetzen-und-erstes-ausführen)
+        - [Flask Anwendung](#flask-anwendung)
+
+<!-- markdown-toc end -->
+
+
 # Einführung
 
 ## Motivation
