@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Newticker</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}" />
+        <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='bootstrap.min.js' ) }}"></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>
+            async function subscribe() {
+                let response = await fetch("/notifications");
+
+                if(response.status == 502) {
+                    await subscribe();
+                } else if(response.status != 200) {
+                    $("#notifications").html("<b>Daten momentan nicht verfügbar</b>");
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await subscribe();
+                } else {
+                    let message = await response.text();
+                    $("#notifications").html(message);
+
+                    await subscribe();
+                }
+            }
+
+         subscribe();
+        </script>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">Newsticker</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#filterOptions" aria-controls="filterOptions" aria-expanded="false" aria-label="Zeige Filter">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="filterOptions">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a href="#">Source 1</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div id="notifications"></div>
+    </body>
+</html>
