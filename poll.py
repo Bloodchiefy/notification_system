@@ -2,12 +2,9 @@ from flask import Flask, render_template
 from sqliteConnection import createConnection, selectNotifications
 from notification import Notification
 import os
+
 app = Flask(__name__)
 
-poll_data = {
-    'question': 'Which web framework do you use?',
-    'fields': ['Flask', 'Django', 'TurboGears', 'web2py', 'pylonsproject']
-}
 
 @app.route('/')
 def root():

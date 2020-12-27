@@ -684,3 +684,122 @@ python main.py
 ```
 
 Es sollte zu keinen Fehlern kommen, wenn alles installiert wurde. Außerdem sollte nun eine `notification.db` in unserem Ordner angelegt worden sein. Damit ist zumindest ein Teil der in der Motivation angesprochenen Punkte realisiert worden und in den nächsten Abschnitten kümmern wir uns um die Darstellung unserer Daten.
+
+### Flask Anwendung
+Wir wollen nun unsere Daten darstellen. Dazu können wir die Bibliothek `flask` verwenden, um einen kleinen Webserver zu starten, auf den wir im lokalen Netz zugreifen können.
+
+Für die Basis, wie man eine kleine Flask-Anwendung schreibt, hilf mir diese Recherche: https://code-maven.com/a-polling-station-with-flask
+
+Wir gehen aber hier auch Schritt für Schritt vor. Zunächst benötigen wir eine python Datei, die unseren Webserver repräsentiert. Zuerst installieren wir aber noch `flask`:
+
+```sh
+pip install flask --user
+```
+
+Jetzt legen wir in unserem Projektordner eine Python-Datei an, die `poll.py` heißen soll:
+
+`Zu emacs wechseln` -&#62; `F10` -&#62; `File` -&#62; `Visit New File` -&#62; `main.py eingeben und ENTER`
+
+Nun importieren wir von Flask etwas, und von unseren geschriebenen Klassen etwas, und die Bibliothek `os`:
+
+```python
+from flask import Flask, render_template
+from sqliteConnection import createConnection, selectNotifications
+from notification import Notification
+import os
+```
+
+Wir erstellen nun den Flask server mit folgendem Aufruf:
+
+```python
+...
+app = Flask(__name__)
+```
+
+Nun erstellen wir zwei Methoden. Eine Methode, die uns einfach eine Webseite zurückgibt, und eine weitere, die uns die Benachrichtigungen aus unserer Datenbank holt.
+
+```python
+...
+@app.route('/')
+def root():
+    return render_template('poll.html')
+```
+
+Diese Methode sendet dem Client, der die Webseite anfrägt, einfach eine HTML-Datei. Die HTML-Datei wird `poll.html` heißen, und wir werden uns später mit der Bearbeitung davon beschäftigen. Nun fehlt noch die Methode, die unsere Benachrichtigungen als HTML zurückgibt. Dafür definieren wir diese Methode:
+
+```python
+...
+@app.route('/notifications')
+def notifications():
+    conn = createConnection("notifications.db")
+    notifications = selectNotifications(conn)
+    notifyArray = []
+    for key in notifications:
+        notifyArray.append(notifications[key])
+
+    notifyArray = sorted(notifyArray, key=lambda x: x.epoch, reverse=True)
+    notifications = []
+    for notification in notifyArray:
+        notifications.append(( \
+                notification.id, \
+                notification.epoch, \
+                notification.source, \
+                notification.topic, \
+                notification.description))
+
+
+    return render_template('notifications.html', data=notifications)
+```
+
+Diese Methode erstellt zunächst eine Verbindung zu unserer sqlite-Datenbank, holt alle Benachrichtigungen und speichert diese mit der `for`-Schleife in `notifyArray`. Das müssen wir leider so machen, weil unsere Methode `selectNotifications()` ein Dictionary zurückgibt, und wir wollen aber eine Liste haben. Nun können wir diese Liste nach dem Datum sortieren. Dann müssen wir mit einer `for`-Schleife wieder durch die Liste durchgehen und aus den Benachrichtigungen arrays machen, damit unsere HTML-Seite, bzw. dann unser Javascript-Code damit umgehen kann. Dazu fügen wir zu der Liste `notifications` ein Tupel mit allen Attributen der `notification` hinzu. Dann wird eine HTML-Seite zurückgegeben, die aber noch als `data` die Benachrichtigungen bekommt. Diese HTML-Seite heißt `notifications.html`, die wir auch noch behandeln werden.
+
+Zum Schluss müssen wir noch die Anwendung laufen lassen. Das machen wir mit folgendem Code:
+
+```python
+if __name__ == "__main__":
+    app.run(debug=True)
+``**
+
+Hier nochmal der komplette Code:
+
+**project/poll.py**
+```python
+from flask import Flask, render_template
+from sqliteConnection import createConnection, selectNotifications
+from notification import Notification
+import os
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def root():
+   return render_template('poll.html')
+
+@app.route('/notifications')
+def notifications():
+    conn = createConnection("notifications.db")
+    notifications = selectNotifications(conn)
+    notifyArray = []
+    for key in notifications:
+        notifyArray.append(notifications[key])
+
+    notifyArray = sorted(notifyArray, key=lambda x: x.epoch, reverse=True)
+    notifications = []
+    for notification in notifyArray:
+        notifications.append(( \
+                notification.id, \
+                notification.epoch, \
+                notification.source, \
+                notification.topic, \
+                notification.description))
+
+
+    return render_template('notifications.html', data=notifications)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+Okay, wunderbar, jetzt können wir eine uns um die HTML-Seiten kümmern.
+
