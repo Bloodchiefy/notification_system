@@ -802,4 +802,134 @@ if __name__ == "__main__":
 ```
 
 Okay, wunderbar, jetzt können wir eine uns um die HTML-Seiten kümmern.
+Dafür müssen wir zuerst einen neuen Ordner erstellen, den wir `templates` nennen:
 
+```sh
+mkdir templates
+```
+
+Nun wecheseln wir den Ordner und legen zwei Dateien an:
+
+```sh
+cd templates
+touch poll.html
+touch notification.html
+```
+
+
+Nun wechseln wir zu emacs und bearbeiten die erste HTML-Datei:
+`Zu emacs wechseln` -&#62; `F10` -&#62; `File` -&#62; `Open File` -&#62; `templates/poll.html eingeben und ENTER drücken`
+
+In dieser Datei schreiben wir zuerst einen Basis HTML-Code rein:
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Newsticker</title>
+    </head>
+    <body>
+        <h1>Newsticker</h1>
+        <div id="notifications"></div>
+    </body>
+</html>
+```
+
+Nun wechseln wir wieder zur Konsole, wechseln wieder in dern Projekt-Ordner, erstellen einen neuen Ordner `static` und wechseln in diesen. Dann laden wir eine javascript-Datei runter, die uns erlaubt, jQuery-Code zu schreiben und Basis-Funktionen zu nutzen.
+
+```sh
+cd ..
+cd static
+curl https://code.jquery.com/jquery-3.5.1.min.js -o jquery.min.js
+```
+
+Jetzt wechseln wir wieder zu emacs und bearbeiten unsere `poll.html`. Wir müssen hier unsere neue `jquery.min.js** einbinden und ein bisschen Javascript schreiben, der immer wieder Anfragen an unseren Server schickt, der uns die Benachrichtigungen als HTML liefert, welches wir dann in unser HTML einbinden können. Dies folgt dem Code von dieser Seite: https://javascript.info/long-polling
+
+**project/templates/poll.html**
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Newsticker</title>
+        <script type="text/javascript" href="{{ url_for('static', filename='jquery.min.js') }}"
+        <script>
+            async function subscribe() {
+                let response = await fetch("/notifications");
+
+                if(response.status == 502) {
+                    await subscribe();
+                } else if(response.status != 200) {
+                    $("#notifications").html("<b>Daten momentan nicht verfügbar</b>");
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await subscribe();
+                } else {
+                    let message = await response.text();
+                    $("#notifications").html(message);
+
+                    await subscribe();
+                }
+            }
+
+         subscribe();
+        </script>
+    </head>
+    <body>
+        <h1>Newsticker</h1>
+        <div id="notifications"></div>
+    </body>
+</html>   
+```
+
+Nun öffnen wir die `notifications.html` in emacs und machen dort unsere finale Bearbeitung:
+
+`Zu emacs wechseln` -&#62; `F10` -&#62; `File` -&#62; `Open File` -&#62; `templates/notifications.html eingeben und ENTER drücken`
+
+In der `notifications.html** definieren wir, wie die Benachrichtigungen uns dargestellt werden sollen.
+
+**projekt/notifications.html**
+```html
+<table>
+    {% for e in data %}
+    <tr>
+        <td>{{ e[3] }}</td>
+        <td>{{ e[2] }}</td>
+        <td>{{ e[1] }}</td>
+        <td>{{ e[4] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+```
+
+Wir wollen die Benachrichtigungen hier als Tabelle Darstellen. Dafür verwenden wir erstmal den &#60;table&#62;-Tag und öffnen hier eine `for`-Schleife, welches in einer Flaskanwendung richtig interpretiert wird. Wir gehen hier durch unser `data` durch, was wir von unserer `poll.py` in der Methode `notifications()` bekommen. Dann öffnen wir einen &#60;tr&#62;-Tag (Zeilen-Tag) und dann unseren ersten &#60;td&#62;-Tag (Spalten-Tag). Dort soll mir als erstes das `topic` der Benachrichtigung ausgegeben werden. Da nun `e` ein Array ist, müssen wir jetzt wieder nach Position des Attributes gehen, in unserem Fall hat das `topic` die dritte Position im Array. Deshalb schreiben wir `{{ e[3] }}` und danach den End-Tag der Spalte &#60;/td&#62;-Tag. So gehen wir für 3 weitere Attribute vor, der Quelle (zweite Spalte), dem Zeitstempel (dritte Spalte) und der Beschreibung (fünfte Spalte). Dann schließen wir die Zeile mit einem &#60;/td&#62;`-Tag und wir schließen die `for`-Schleife. Ganz zum Schluss verwenden wir noch den End-Tag der Tabelle, den &#60;/table&#62;-Tag.
+
+Damit ist unser kleiner Server erstmal fertig. Wir starten die Anwendung, vom Projekt-Ordner aus, mit:
+
+```
+python poll.py
+```
+
+Nun können wir in einem Browser in die Adresszeile "localhost:5000" eingeben, und die Seite betrachten. Wir können währenddessen die `main.py` aufrufen und dadurch unsere Datenbank ändern, wenn unser kuglige Mitarbeiter mal wieder etwas hochlädt, und wir sehen das Ergebnis sofort, ohne das wir die Seite aktualisieren müssen.
+
+Kleiner Kontrollblick noch, wenn wir alles richtig gemacht haben, sollte unsere Dateistruktur bezüglich unseres Projekt-Ordner wie folgt aussehen:
+
+```
+notificationSystem (unser Projektordner)
+|    main.py
+|    notification.py
+|    notifications.db (falls das Programm schonmal ausgeführt wurde)
+|    poll.py
+|    pullLastUpdates.py
+|    sqliteConnection.py
+|
+└----static
+|        jquery.min.js
+|
+└----templates
+         notifications.html
+         poll.html
+```
+
+Das wäre zunächst das Ende dieses kleinen Tutorials, ich werde das Projekt noch selbst erweitern, und wenn ich Lust habe, schreibe ich noch an diesem Tutorial weiter. Aber damit wäre zumindest die "Basis" geschaffen, ich hoffe, manchen hilft das, besser ins Programmieren reinzukommen und sich mit wenig Arbeit trotzdem ein nützliches System zu basteln. Ich hoffe, die Wall of Text erschrickt nicht, und stellt die Komplexität vollkommen anders dar.
+
+Viel Spaß und viel Erfolg!
