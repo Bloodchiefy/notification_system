@@ -32,7 +32,7 @@ def createTable(conn):
 
 def selectNotifications(conn):
     cur = conn.cursor()
-    cur.execute("SELECT * FROM notifications")
+    cur.execute("SELECT * FROM notifications;")
 
     rows = cur.fetchall()
 
@@ -44,7 +44,7 @@ def selectNotifications(conn):
 
 def selectNotificationsBySource(conn, sourceName):
     cur = conn.cursor()
-    cur.execute("SELECT * FROM notifications WHERE source='" + sourceName + "'")
+    cur.execute("SELECT * FROM notifications WHERE source='" + sourceName + "';")
 
     rows = cur.fetchall()
     notificationsDict = {}
@@ -86,9 +86,10 @@ def importSource(conn, sourceName, notifications):
             notificationsToPush.append(notification)
 
     if len(notificationsToPush) > 0:
-        sortedNotifications = sorted(oldNotifications.values(), key=lambda x:x.epoch)
-        oldNot = sortedNotifications[30:]
-        deleteOldNotifications(conn, oldNot)
         writeNotifications(conn, notificationsToPush)
+        allNotificaations = selectNotificationBySource(conn, sourceName)
+        allNotifications = sorted(allNotifications.values(), key=lambda x:x.epoch)
+        oldNot = allNotifications[30:]
+        deleteOldNotifications(conn, oldNot)
 
 
