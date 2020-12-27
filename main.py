@@ -1,6 +1,5 @@
-from notification import Notification
 from pullLastUpdates import archifPullLastUpdates
-from sqliteConnection import *
+from sqliteConnection import importSource, createConnection, createTable
 
 conn = createConnection('notifications.db')
 createTable(conn)

@@ -532,7 +532,7 @@ Wir müssen nur etwas hinzufügen, falls es neue Benachrichtigungen überhaupt g
 
 Nochmal zur Kontrolle hier der Komplette Code der eben behandelten Datei:
 
-**project/sqliteConnection**
+**project/sqliteConnection.py**
 ```python
 import sqlite3
 
@@ -628,3 +628,59 @@ def importSource(conn, sourceName, notifications):
         oldNot = allNotifications[30:]
         deleteOldNotifications(conn, oldNot)
 ```
+
+### Zusammensetzen und erstes Ausführen
+Nun setzen wir alles zusammen und können es erstmal ausführen. Für ein regelmäßiges Update werden wir noch einen Cron-Job anlegen, damit beschäftigen wir uns aber erst später. Wir legen nun im Projekt-Ordner eine neue Datei an:
+
+```sh
+touch main.py
+```
+
+Nun füllen wir diese wieder mit Code:
+
+`Zu emacs wechseln` -&#62; `F10` -&#62; `File` -&#62; `Open File` -&#62; `main.py auswählen und öffnen` (&#60;Insert&#62;-Modus nicht vergessen :sweat_smile:)
+
+Zuerst müssen wir wieder etwas importieren, und zwar unsere Datensammlungs-Methode und 3 Methoden aus der Datenspeicherung:
+
+```python
+from pullLastUpdates import archifPullLastUpdates
+from sqliteConnection import importSource, createConnection, createTable
+```
+
+Dann erstellen wir eine Verbindung zu erstellen eine Tabelle, falls noch keine existiert.
+
+```python
+...
+conn = createConnection('notifications.db')
+createTable(conn)
+```
+
+Nun können wir die Updates vom `meddl.center` holen und importieren. Das machen wir so:
+
+```python
+archif = archifPullLastUpdates()
+importSource(conn, "meddl.center", archif)
+```
+
+Der gesamte Code dafür ist wie folgt:
+
+**project/main.py**
+```python
+from pullLastUpdates import archifPullLastUpdates
+from sqliteConnection import importSource, createConnection, createTable
+
+conn = createConnection('notifications.db')
+createTable(conn)
+
+
+archif = archifPullLastUpdates()
+importSource(conn, "meddl.center", archif)
+```
+
+Nun können wir unseren Code mal testen. Das machen wir, indem wir folgendes auf der Konsole ausführen:
+
+```sh
+python main.py
+```
+
+Es sollte zu keinen Fehlern kommen, wenn alles installiert wurde. Außerdem sollte nun eine `notification.db` in unserem Ordner angelegt worden sein. Damit ist zumindest ein Teil der in der Motivation angesprochenen Punkte realisiert worden und in den nächsten Abschnitten kümmern wir uns um die Darstellung unserer Daten.
